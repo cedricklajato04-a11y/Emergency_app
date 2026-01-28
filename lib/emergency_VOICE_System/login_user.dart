@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'emergency_menu.dart';
+import 'sign_up.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -9,50 +10,30 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  bool isLogin = true;
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
-  final fullNameController = TextEditingController();
-  final contactController = TextEditingController();
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  final confirmPasswordController = TextEditingController();
-
-  void handleSubmit() {
+  void handleLogin() {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
-    if (isLogin) {
-      if (email.isEmpty || password.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Email and password are required")),
-        );
-        return;
-      }
-    } else {
-      if (fullNameController.text.isEmpty ||
-          contactController.text.isEmpty ||
-          email.isEmpty ||
-          password.isEmpty ||
-          confirmPasswordController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("All fields are required")),
-        );
-        return;
-      }
-
-      if (password != confirmPasswordController.text) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Passwords do not match")),
-        );
-        return;
-      }
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email and password are required')),
+      );
+      return;
     }
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) => const EmergencyMenuPage(),
-      ),
+      MaterialPageRoute(builder: (_) => const EmergencyMenuPage()),
+    );
+  }
+
+  void handleCreateAccount() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SignUpPage()),
     );
   }
 
@@ -67,7 +48,6 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 🔝 HEADER WITH MIC BACKGROUND
                 SizedBox(
                   height: 190,
                   child: Stack(
@@ -81,7 +61,6 @@ class _LoginPageState extends State<LoginPage> {
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
-                          // ❌ Emergency icon without circle
                           Icon(
                             Icons.emergency,
                             size: 130,
@@ -89,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           SizedBox(height: 8),
                           Text(
-                            "Emergency Voice",
+                            'Emergency Voice',
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.w700,
@@ -101,10 +80,7 @@ class _LoginPageState extends State<LoginPage> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
-                // ❌ USER ICON WITHOUT CIRCLE
                 const Center(
                   child: Icon(
                     Icons.person,
@@ -112,113 +88,46 @@ class _LoginPageState extends State<LoginPage> {
                     color: Color.fromARGB(255, 54, 54, 54),
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
-                // 🔐 LOGIN / SIGN UP TEXT
-                Text(
-                  isLogin ? "GUEST" : "Sign Up",
+                const Text(
+                  'LOGIN',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
-                // 👤 FULL NAME (SIGN UP ONLY)
-                if (!isLogin)
-                  Column(
-                    children: [
-                      TextField(
-                        controller: fullNameController,
-                        decoration: const InputDecoration(
-                          labelText: "Full Name",
-                          prefixIcon: Icon(Icons.person),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                  ),
-
-                // 📞 CONTACT NUMBER (SIGN UP ONLY)
-                if (!isLogin)
-                  Column(
-                    children: [
-                      TextField(
-                        controller: contactController,
-                        keyboardType: TextInputType.phone,
-                        decoration: const InputDecoration(
-                          labelText: "Contact Number",
-                          prefixIcon: Icon(Icons.phone),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                  ),
-
-                // 📧 EMAIL
                 TextField(
                   controller: emailController,
                   decoration: const InputDecoration(
-                    labelText: "Email",
+                    labelText: 'Email',
                     prefixIcon: Icon(Icons.email),
                     border: OutlineInputBorder(),
                   ),
                 ),
-
                 const SizedBox(height: 12),
-
-                // 🔑 PASSWORD
                 TextField(
                   controller: passwordController,
                   obscureText: true,
                   decoration: const InputDecoration(
-                    labelText: "Password",
+                    labelText: 'Password',
                     prefixIcon: Icon(Icons.lock),
                     border: OutlineInputBorder(),
                   ),
                 ),
-
-                const SizedBox(height: 12),
-
-                // 🔁 CONFIRM PASSWORD (SIGN UP ONLY)
-                if (!isLogin)
-                  TextField(
-                    controller: confirmPasswordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: "Confirm Password",
-                      prefixIcon: Icon(Icons.lock_outline),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-
                 const SizedBox(height: 20),
-
-                // 🔘 BUTTON
                 SizedBox(
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: handleSubmit,
-                    child: Text(isLogin ? "LOGIN" : "SIGN UP"),
+                    onPressed: handleLogin,
+                    child: const Text('LOGIN'),
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
                 TextButton(
-                  onPressed: () {
-                    setState(() => isLogin = !isLogin);
-                  },
-                  child: Text(
-                    isLogin
-                        ? "Create new account"
-                        : "Already have an account? Login",
-                  ),
+                  onPressed: handleCreateAccount,
+                  child: const Text('Create new account'),
                 ),
               ],
             ),
