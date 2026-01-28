@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'login_user.dart';
+import 'custom_contacts.dart';
+import 'feedback_page.dart';
+import 'settings_page.dart';
+import 'aboutus_page.dart';
 
+// 🔹 EMERGENCY DASHBOARD PAGE
 class EmergencyMenuPage extends StatelessWidget {
   const EmergencyMenuPage({super.key});
 
@@ -29,15 +34,13 @@ class EmergencyMenuPage extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // 🔹 DRAWER HEADER WITH USER ICON + CLICKABLE VIEW DETAILS
+            // Drawer Header
             DrawerHeader(
               decoration: const BoxDecoration(
                 color: Color.fromARGB(226, 175, 23, 23),
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // 🔹 USER ICON
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: const BoxDecoration(
@@ -50,10 +53,7 @@ class EmergencyMenuPage extends StatelessWidget {
                       color: Color.fromARGB(255, 44, 44, 44),
                     ),
                   ),
-
                   const SizedBox(width: 12),
-
-                  // 🔹 USER NAME + VIEW DETAILS
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,7 +69,7 @@ class EmergencyMenuPage extends StatelessWidget {
                       const SizedBox(height: 4),
                       GestureDetector(
                         onTap: () {
-                          Navigator.pop(context); // Close drawer first
+                          Navigator.pop(context);
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -92,7 +92,7 @@ class EmergencyMenuPage extends StatelessWidget {
               ),
             ),
 
-            // MENU ITEMS
+            // Drawer Items
             drawerItem(Icons.contacts, "Custom Contacts", context),
             drawerItem(Icons.history, "Call Log History", context),
             drawerItem(Icons.feedback, "Feedback", context),
@@ -109,15 +109,11 @@ class EmergencyMenuPage extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 40),
-
-            // USER ICON IN CENTER + TEXT
             Column(
               children: const [
-                Icon(
-                  Icons.person,
-                  size: 120,
-                  color: Color.fromARGB(255, 44, 44, 44),
-                ),
+                Icon(Icons.person,
+                    size: 120,
+                    color: Color.fromARGB(255, 44, 44, 44)),
                 SizedBox(height: 12),
                 Text(
                   "USER",
@@ -129,41 +125,38 @@ class EmergencyMenuPage extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 40),
 
-            // EMERGENCY BOXES
+            // Emergency Buttons
             Expanded(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: const [
-                      Expanded(
-                        child: EmergencyBox(
-                          icon: Icons.local_police,
-                          label: "POLICE",
-                          color: Color.fromARGB(255, 21, 135, 228),
-                        ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: const [
+                    Expanded(
+                      child: EmergencyBox(
+                        icon: Icons.local_police,
+                        label: "POLICE",
+                        color: Color.fromARGB(255, 21, 135, 228),
                       ),
-                      SizedBox(width: 16),
-                      Expanded(
-                        child: EmergencyBox(
-                          icon: Icons.local_hospital,
-                          label: "HOSPITAL",
-                          color: Color.fromARGB(255, 68, 163, 71),
-                        ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: EmergencyBox(
+                        icon: Icons.local_hospital,
+                        label: "HOSPITAL",
+                        color: Color.fromARGB(255, 68, 163, 71),
                       ),
-                      SizedBox(width: 16),
-                      Expanded(
-                        child: EmergencyBox(
-                          icon: Icons.local_fire_department,
-                          label: "FIRE",
-                          color: Color.fromARGB(255, 241, 59, 46),
-                        ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: EmergencyBox(
+                        icon: Icons.local_fire_department,
+                        label: "FIRE",
+                        color: Color.fromARGB(255, 241, 59, 46),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -173,32 +166,62 @@ class EmergencyMenuPage extends StatelessWidget {
     );
   }
 
-  // REUSABLE DRAWER ITEM
+  // 🔹 DRAWER ITEM LOGIC
   Widget drawerItem(IconData icon, String title, BuildContext context) {
     return ListTile(
       leading: Icon(icon),
       title: Text(title),
       onTap: () {
-        Navigator.pop(context);
-        if (title == "Log Out") {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const LoginPage(),
-            ),
-            (route) => false,
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("$title clicked")),
-          );
+        Navigator.pop(context); // close drawer
+
+        switch (title) {
+          case "Log Out":
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+              (route) => false,
+            );
+            break;
+
+          case "Custom Contacts":
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CustomContactsPage()),
+            );
+            break;
+
+          case "Feedback":
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const FeedbackPage()),
+            );
+            break;
+
+          case "Settings":
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingsPage()),
+            );
+            break;
+
+          case "About Us":
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AboutUsPage()),
+            );
+            break;
+
+          default:
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("$title clicked")),
+            );
         }
       },
     );
   }
 }
 
-// EMERGENCY BOX
+// 🔹 EMERGENCY BOX
 class EmergencyBox extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -248,7 +271,7 @@ class EmergencyBox extends StatelessWidget {
   }
 }
 
-// NEW PAGE: USER DETAILS
+// 🔹 USER DETAILS PAGE
 class UserDetailsPage extends StatelessWidget {
   const UserDetailsPage({super.key});
 
@@ -256,8 +279,8 @@ class UserDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("User Details"),
         backgroundColor: const Color.fromARGB(214, 184, 23, 23),
+        title: const Text("User Details"),
       ),
       body: const Center(
         child: Text(
