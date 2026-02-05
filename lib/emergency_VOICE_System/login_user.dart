@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'sign_up.dart';
 import '../auth/auth_service.dart';
+import 'admin_login_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,18 +11,14 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // auth service
   final AuthService _authService = AuthService();
 
- Color loginBgColor = const Color.fromARGB(255, 228, 58, 58); 
- Color loginTextColor = const Color.fromARGB(255, 24, 19, 19);                         
+  Color loginBgColor = const Color.fromARGB(255, 228, 58, 58);
+  Color loginTextColor = const Color.fromARGB(255, 24, 19, 19);
 
-
-  // text controllers
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
- 
   bool _isPasswordVisible = false;
 
   Future<void> handleLogin() async {
@@ -51,19 +48,55 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+ void handleAdminClick() {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const AdminLoginPage(),
+    ),
+  );
+}
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 253, 238, 238),
-      body: SafeArea(
-        child: Center(
+  backgroundColor: const Color.fromARGB(255, 253, 238, 238),
+  body: SafeArea(
+    child: Column(
+      children: [
+        // 🔹 Admin icon at top-left
+        Align(
+          alignment: Alignment.topLeft,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: GestureDetector(
+              onTap: handleAdminClick,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.person, size: 18, color: Colors.black54),
+                  SizedBox(width: 4),
+                  Text(
+                    'ADMIN',
+                    style: TextStyle(fontSize: 12, color: Colors.black54),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // 🔹 Main content scrollable
+        Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 40),
-
                 Column(
                   children: const [
                     Icon(
@@ -96,6 +129,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 16),
 
+                // Email & Password
                 TextField(
                   controller: emailController,
                   decoration: const InputDecoration(
@@ -107,7 +141,6 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 12),
 
-               
                 TextField(
                   controller: passwordController,
                   obscureText: !_isPasswordVisible,
@@ -132,34 +165,33 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 20),
 
-              SizedBox(
-  height: 48,
-  child: ElevatedButton(
-    onPressed: handleLogin,
-    style: ButtonStyle(
-      backgroundColor: MaterialStateProperty.resolveWith((states) {
-        return loginBgColor; // 🎨 background
-      }),
-      foregroundColor: MaterialStateProperty.resolveWith((states) {
-        return loginTextColor; // ✍️ text
-      }),
-      shape: MaterialStateProperty.all(
-        RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-    ),
-    child: const Text(
-      'LOG IN',
-      style: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-      ),
-    ),
-  ),
-),
+                SizedBox(
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: handleLogin,
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all(loginBgColor),
+                      foregroundColor:
+                          MaterialStateProperty.all(loginTextColor),
+                      shape: MaterialStateProperty.all(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    child: const Text(
+                      'LOG IN',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
 
                 const SizedBox(height: 10),
+
                 TextButton(
                   onPressed: handleCreateAccount,
                   child: const Text('Create new account'),
@@ -168,7 +200,9 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ),
-      ),
-    );
+      ],
+    ),
+  ),
+);
   }
-}
+  }
