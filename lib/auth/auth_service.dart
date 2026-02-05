@@ -10,11 +10,15 @@ Future<AuthResponse> signInWithEmailPassword(String email, String password) asyn
       password: password,
     ); 
   }
-  // Sign up with email and password
-  Future<AuthResponse> signUpWithEmailPassword(String email, String password) async {
+  // Sign up with email and password and fullname
+  Future<AuthResponse> signUpWithEmailPassword(String email, String password,String fullname) async {
     return await _supabase.auth.signUp(
+      
       email: email,
       password: password,
+      data: {
+      'full_name': fullname,
+      }
     );
   }
   // Sign out

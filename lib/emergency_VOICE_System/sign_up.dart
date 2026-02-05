@@ -42,6 +42,7 @@ class _SignUpPageState extends State<SignUpPage> {
     await _authService.signUpWithEmailPassword(
       emailController.text.trim(),
       passwordController.text.trim(),
+      fullNameController.text.trim(),
     );
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Account created successfully')),
