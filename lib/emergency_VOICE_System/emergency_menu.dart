@@ -12,7 +12,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 // 🔹 EMERGENCY DASHBOARD PAGE
 class EmergencyMenuPage extends StatefulWidget {
-  const EmergencyMenuPage({super.key});
+  final List<Map<String, String>> contacts;
+  const EmergencyMenuPage({super.key, required this.contacts});
 
   @override
   State<EmergencyMenuPage> createState() => _EmergencyMenuPageState();
@@ -196,7 +197,6 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
 
   String? userEmail;
   String? userId;
-
   bool isLoading = true;
 
   //fetch user data
@@ -232,8 +232,6 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
   }
   @override
   Widget build(BuildContext context) {
-
-    //loading state
     if (isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -281,16 +279,16 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                       Text(
-                        userEmail ??"USER",
-                        style: TextStyle(
+                      Text(
+                        userEmail ?? "USER",
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      GestureDetector(
+                      InkWell(
                         onTap: () {
                           Navigator.pop(context);
                           Navigator.push(
@@ -300,12 +298,15 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
                             ),
                           );
                         },
-                        child: const Text(
-                          "View Details",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                            decoration: TextDecoration.underline,
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 4),
+                          child: Text(
+                            "View Details",
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              decoration: TextDecoration.underline,
+                            ),
                           ),
                         ),
                       ),
@@ -314,7 +315,6 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
                 ],
               ),
             ),
-
             _drawerItem(Icons.contacts, "Custom Contacts"),
             _drawerItem(Icons.history, "Log History"),
             _drawerItem(Icons.feedback, "Feedback"),
@@ -326,7 +326,7 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
         ),
       ),
 
-      // BODY (unchanged)
+      // BODY
       body: SafeArea(
         child: Column(
           children: [
@@ -365,7 +365,8 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
                 const SizedBox(height: 12),
                 Text(
                   userEmail ?? "USER",
-                  style: const TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 35, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -425,37 +426,38 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
       title: Text(title),
       onTap: () async {
         Navigator.pop(context);
-
         switch (title) {
           case "Log Out":
             await _handleLogout(context);
             break;
-
           case "Custom Contacts":
-            Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const CustomContactsPage()));
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const CustomContactsPage()),
+            );
             break;
-
           case "Feedback":
             Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const FeedbackPage()));
             break;
-
           case "Settings":
             Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const SettingsPage()));
             break;
-
           case "About Us":
             Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const AboutUsPage()));
+            break;
+          case "view details":
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const UserDetailsPage()));
             break;
         }
       },
     );
   }
 }
-
 
 // 🔹 EMERGENCY BOX
 class EmergencyBox extends StatelessWidget {
@@ -500,27 +502,6 @@ class EmergencyBox extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// 🔹 USER DETAILS PAGE
-class UserDetailsPage extends StatelessWidget {
-  const UserDetailsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(214, 184, 23, 23),
-        title: const Text("User Details"),
-      ),
-      body: const Center(
-        child: Text(
-          "User profile information goes here.",
-          style: TextStyle(fontSize: 18),
         ),
       ),
     );

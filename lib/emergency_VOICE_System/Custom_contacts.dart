@@ -244,13 +244,14 @@ class _CustomContactsPageState extends State<CustomContactsPage> {
 
                     // Tap contact → Emergency Menu
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const EmergencyMenuPage(),
-                        ),
-                      );
-                    },
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => EmergencyMenuPage(contacts: contacts),
+    ),
+  );
+},
+
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () async {
