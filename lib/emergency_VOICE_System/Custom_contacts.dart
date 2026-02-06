@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'emergency_menu.dart';
 
 class CustomContactsPage extends StatefulWidget {
   const CustomContactsPage({super.key});
@@ -102,7 +101,7 @@ class _CustomContactsPageState extends State<CustomContactsPage> {
     locationController.clear();
     emergencyType = "Police";
 
-    Navigator.pop(context);
+    Navigator.pop(context); // Close dialog
   } catch (e) {
     debugPrint("ADD CONTACT ERROR: $e");
     ScaffoldMessenger.of(context).showSnackBar(
@@ -243,14 +242,7 @@ class _CustomContactsPageState extends State<CustomContactsPage> {
                     isThreeLine: true,
 
                     // Tap contact → Emergency Menu
-                    onTap: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => EmergencyMenuPage(contacts: contacts),
-    ),
-  );
-},
+               
 
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),

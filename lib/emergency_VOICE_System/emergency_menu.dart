@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/emergency_VOICE_System/userdetails_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'custom_contacts.dart';
 import 'feedback_page.dart';
