@@ -46,7 +46,7 @@ class AboutUsPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              "Emergency Voice System is a mobile application designed to help users quickly access emergency services such as Police, Hospital, and Fire Department. It also allows users to add custom contacts, submit feedback, and manage settings for a personalized experience.",
+              "Emergency App is a mobile application designed to help users quickly access emergency services such as Police, Hospital, and Fire Department. It also allows users to add custom contacts, submit feedback, and manage settings for a personalized experience.",
               style: TextStyle(fontSize: 16),
             ),
 
@@ -78,7 +78,7 @@ class AboutUsPage extends StatelessWidget {
             const Text(
               "Developed by: CS PHANTOM\n"
               "Contact: developer@example.com\n"
-              "© 2026 Emergency Voice System. All rights reserved.",
+              "© 2026 Emergency App. All rights reserved.",
               style: TextStyle(fontSize: 16),
             ),
           ],

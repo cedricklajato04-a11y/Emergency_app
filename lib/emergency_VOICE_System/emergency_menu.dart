@@ -7,6 +7,7 @@ import 'aboutus_page.dart';
 import '../auth/auth_service.dart';
 import 'package:geolocator/geolocator.dart';
 import '../constants/fallback_numbers.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 // 🔹 EMERGENCY DASHBOARD PAGE
@@ -29,9 +30,11 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
       .eq('user_id', userId!)
       .eq('type', type);
 
-  final contacts = List<Map<String, dynamic>>.from(response);
+      // Check if response is a list of maps
 
-  showModalBottomSheet(
+  final contacts = List<Map<String, dynamic>>.from(response); // Cast response to list of maps
+
+  showModalBottomSheet( // Show contacts in a bottom sheet
     context: context,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -41,7 +44,7 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
         padding: const EdgeInsets.all(16),
         child: contacts.isEmpty
             ? Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize: MainAxisSize.min, 
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -57,13 +60,13 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
                     leading: const Icon(Icons.phone),
                     title: const Text("Emergency Hotline"),
                     subtitle: Text(
-                      "Fallback Number: ${FallbackNumbers.getByType(type)}",
+                      "Fallback Number: ${FallbackNumbers.getByType(type)}", // Show fallback number if no custom contacts are found
                     ),
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            "Calling ${FallbackNumbers.getByType(type)}...",
+                            "Calling ${FallbackNumbers.getByType(type)}...", // Show fallback number in snackbar when tapped
                           ),
                         ),
                       );
@@ -71,7 +74,7 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
                   ),
                 ],
               )
-            : Column(
+            : Column( // Show custom contacts if they exist
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -84,7 +87,7 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
                   ),
                   const SizedBox(height: 12),
 
-                  ListView.builder(
+                  ListView.builder( // List custom contacts
                     shrinkWrap: true,
                     itemCount: contacts.length,
                     itemBuilder: (context, index) {
@@ -96,15 +99,28 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
                           "${contact['number']}\n${contact['location']}",
                         ),
                         isThreeLine: true,
-                        onTap: () {
+                        onTap: () async {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(
-                                "Calling ${contact['name']}...",
-                              ),
+                              content: Text("Calling ${contact['name']}..."),
                             ),
                           );
-                        },
+
+                          final Uri phoneUri = Uri(
+                            scheme: 'tel',
+                            path: contact['phone'], // e.g. "1234567890"
+                          );
+
+                          if (await canLaunchUrl(phoneUri)) {
+                            await launchUrl(phoneUri);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Could not open phone dialer"),
+                              ),
+                            );
+                          }
+                        }
                       );
                     },
                   ),
@@ -464,6 +480,7 @@ class EmergencyBox extends StatelessWidget {
         onTap: onPressed, // 👈 USE THIS
         child: Container(
           decoration: BoxDecoration(
+            // ignore: deprecated_member_use
             color: color.withOpacity(0.15),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: color, width: 2),
