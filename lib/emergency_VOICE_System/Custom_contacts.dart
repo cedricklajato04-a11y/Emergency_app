@@ -1,50 +1,119 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'emergency_menu.dart';
 
 class CustomContactsPage extends StatefulWidget {
   const CustomContactsPage({super.key});
 
-  @override
+
+  @override // ignore: library_private_types_in_public_api
   State<CustomContactsPage> createState() => _CustomContactsPageState();
+  
 }
 
+
 class _CustomContactsPageState extends State<CustomContactsPage> {
-  final List<Map<String, String>> contacts = [];
+
+//supabase client
+  final supabase = Supabase.instance.client;
+
+  User? get user => supabase.auth.currentUser;
+
+//fetching contacts from database
+  Future<void> fetchContacts() async {
+  if (user == null) return;
+
+  try { // Fetch contacts for the current user, ordered by creation time
+    final response = await supabase
+        .from('custom_contacts')
+        .select()
+        .order('created_at');
+
+    setState(() { // Update state with fetched contacts
+      contacts = List<Map<String, dynamic>>.from(response);
+      isLoading = false;
+    });
+  } catch (e) { // Handle errors and update loading state
+    isLoading = false;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Failed to load contacts")),
+    );
+  }
+  } 
+
+  @override
+  void initState() {
+    super.initState();
+    fetchContacts();
+  }
+
+
+  // List to hold contacts
+  List<Map<String, dynamic>> contacts = [];
+  bool isLoading = true;
+
 
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
   final locationController = TextEditingController();
   String emergencyType = "Police"; // Default value
 
-  void addContact() {
-    final name = nameController.text.trim();
-    final phone = phoneController.text.trim();
-    final location = locationController.text.trim();
+  Future<void> addContact() async {
+  final user = supabase.auth.currentUser;
 
-    if (name.isEmpty || phone.isEmpty || location.isEmpty || emergencyType.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("All fields are required")),
-      );
-      return;
-    }
+  if (user == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("User not logged in")),
+    );
+    return;
+  }
+
+  final name = nameController.text.trim();
+  final phone = phoneController.text.trim();
+  final location = locationController.text.trim();
+
+  if (name.isEmpty || phone.isEmpty || location.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("All fields are required")),
+    );
+    return;
+  }
+  //adding contact to database
+  try {
+    await supabase.from('custom_contacts').insert({
+      'user_id': user.id,
+      'name': name,
+      'number': phone, 
+      'location': location,
+      'type': emergencyType,
+    });
 
     setState(() {
       contacts.add({
-        "name": name,
-        "phone": phone,
-        "location": location,
-        "type": emergencyType,
+        'name': name,
+        'number': phone,
+        'location': location,
+        'type': emergencyType,
       });
     });
 
-    // Clear fields
     nameController.clear();
     phoneController.clear();
     locationController.clear();
     emergencyType = "Police";
 
     Navigator.pop(context);
+  } catch (e) {
+    debugPrint("ADD CONTACT ERROR: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Failed to add contact")),
+    );
   }
+}
+
+
+  
+
 
   void showAddContactDialog() {
     showDialog(
@@ -140,14 +209,16 @@ class _CustomContactsPageState extends State<CustomContactsPage> {
         onPressed: showAddContactDialog,
         child: const Icon(Icons.add),
       ),
-      body: contacts.isEmpty
-          ? const Center(
-              child: Text(
-                "No emergency contacts added",
-                style: TextStyle(fontSize: 16),
-              ),
-            )
-          : ListView.builder(
+      body: isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : contacts.isEmpty
+            ? const Center(
+                child: Text(
+                  "No emergency contacts added",
+                  style: TextStyle(fontSize: 16),
+                ),
+              )
+        : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: contacts.length,
               itemBuilder: (context, index) {
@@ -163,11 +234,12 @@ class _CustomContactsPageState extends State<CustomContactsPage> {
                       color: Color.fromARGB(214, 184, 23, 23),
                     ),
                     title: Text(
-                      contact["name"]!,
+                      contact['name'],
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                        "${contact["phone"]!}\n${contact["location"]!} - ${contact["type"]!}"),
+                      "${contact['number'] ?? ''}\n${contact['location'] ?? ''} - ${contact['type'] ?? ''}",
+                    ),
                     isThreeLine: true,
 
                     // Tap contact → Emergency Menu
@@ -182,11 +254,16 @@ class _CustomContactsPageState extends State<CustomContactsPage> {
 
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        setState(() {
-                          contacts.removeAt(index);
-                        });
-                      },
+                      onPressed: () async {
+                          final contactId = contact['id'];
+
+                          await supabase
+                              .from('custom_contacts')
+                              .delete()
+                              .eq('id', contactId);
+
+                          fetchContacts();
+                        },
                     ),
                   ),
                 );
