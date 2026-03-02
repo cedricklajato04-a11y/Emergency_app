@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/emergency_VOICE_System/userdetails_page.dart';
+import 'package:my_app/emergency_VOICE_System/UserDetails/userdetails_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'custom_contacts.dart';
-import 'feedback_page.dart';
-import 'settings_page.dart';
-import 'aboutus_page.dart';
-import '../auth/auth_service.dart';
-import 'package:geolocator/geolocator.dart';
-import '../constants/fallback_numbers.dart';
+import '../Contacts/Custom_contacts.dart';
+import '../feedback_page.dart';
+import '../Settings/settings_page.dart';
+import '../AboutUs/aboutus_page.dart';
+import '../../auth/auth_service.dart';
+import '../../constants/fallback_numbers.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:my_app/services/location_service.dart';
 
 
 // 🔹 EMERGENCY DASHBOARD PAGE
 class EmergencyMenuPage extends StatefulWidget {
+  
   final List<Map<String, String>> contacts;
   const EmergencyMenuPage({super.key, required this.contacts});
 
@@ -20,8 +21,15 @@ class EmergencyMenuPage extends StatefulWidget {
   State<EmergencyMenuPage> createState() => _EmergencyMenuPageState();
 }
 
+
+
+
 class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
   
+  // State variables for location and address
+  String? _address;
+  bool _isLoadingAddress = false;
+
   //supabase client
   void _showEmergencyContacts(String type) async {
   if (userId == null) return;
@@ -102,27 +110,20 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
                         ),
                         isThreeLine: true,
                         onTap: () async {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("Calling ${contact['name']}..."),
-                            ),
+                          final phoneNumber = (contact['number'] ?? '').toString().trim();
+                          if (phoneNumber.isEmpty) return;
+
+                          final ok = await launchUrl(
+                            Uri(scheme: 'tel', path: phoneNumber),
+                            mode: LaunchMode.externalApplication,
                           );
 
-                          final Uri phoneUri = Uri(
-                            scheme: 'tel',
-                            path: contact['phone'], // e.g. "1234567890"
-                          );
-
-                          if (await canLaunchUrl(phoneUri)) {
-                            await launchUrl(phoneUri);
-                          } else {
+                          if (!ok && context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Could not open phone dialer"),
-                              ),
+                              const SnackBar(content: Text("Could not open phone dialer")),
                             );
                           }
-                        }
+                        },
                       );
                     },
                   ),
@@ -135,58 +136,7 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
 
 
 
-  //--------------------------------LOCTION HANDLING--------------------------------
-  //location variables
-  Position? _currentPosition;
-  String? _locationError;
-  bool _isLoadingLocation = true;
 
-  Future<void> _getUserLocation() async { // Method to get user location with error handling
-  try {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled(); // Check if location services are enabled
-    if (!serviceEnabled) {
-      setState(() {
-        _locationError = "Location services are disabled";
-        _isLoadingLocation = false;
-      });
-      return;
-    }
-
-    LocationPermission permission = await Geolocator.checkPermission(); // Check location permissions
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        setState(() {
-          _locationError = "Location permission denied";
-          _isLoadingLocation = false;
-        });
-        return;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) { // Permissions are permanently denied, handle appropriately
-      setState(() {
-        _locationError = "Location permission permanently denied";
-        _isLoadingLocation = false;
-      });
-      return;
-    }
-
-    final position = await Geolocator.getCurrentPosition( // Request high accuracy location
-      desiredAccuracy: LocationAccuracy.high,
-    );
-
-    setState(() { // Update state with the retrieved position
-      _currentPosition = position;
-      _isLoadingLocation = false;
-    });
-  } catch (e) { // Handle any errors that occur during location retrieval
-    setState(() {
-      _locationError = "Failed to get location";
-      _isLoadingLocation = false;
-    });
-  }
-}
 
   //auth service
 
@@ -216,12 +166,33 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
     });
   }
 
-  @override
-  void initState() {
+@override
+void initState() {
   super.initState();
-  _loadUser(); // Load user data on init
-  _getUserLocation(); // Get user location on init
-  }
+  _loadUser();
+
+  // refresh location then convert to address
+  LocationService.refresh().then((pos) async {
+    if (!mounted) return;
+
+    if (pos != null) {
+      setState(() => _isLoadingAddress = true);
+
+      final addr = await LocationService.getAddressFromPosition(pos);
+
+      if (!mounted) return;
+      setState(() {
+        _address = addr ?? "Address not available";
+        _isLoadingAddress = false;
+      });
+    } else {
+      setState(() {
+        _address = LocationService.lastError ?? "Location not available";
+        _isLoadingAddress = false;
+      });
+    }
+  });
+}
 
 
 
@@ -231,6 +202,15 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
   Future<void> _handleLogout(BuildContext context) async {
     await _authService.signOut();
   }
+
+
+
+
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -245,7 +225,7 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(214, 184, 23, 23),
         title: const Text(
-          "EMERGENCY DASHBOARD",
+          "DASHBOARD",
           style: TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -317,7 +297,6 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
               ),
             ),
             _drawerItem(Icons.contacts, "Custom Contacts"),
-            _drawerItem(Icons.history, "Log History"),
             _drawerItem(Icons.feedback, "Feedback"),
             _drawerItem(Icons.info, "About Us"),
             _drawerItem(Icons.settings, "Settings"),
@@ -331,34 +310,114 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding( //location display
+            Padding(
+            padding: const EdgeInsets.all(16),
+            child: Container(
               padding: const EdgeInsets.all(16),
-              child: _isLoadingLocation
-                  ? const CircularProgressIndicator()
-                  : _locationError != null
-                      ? Text(
-                          _locationError!,
-                          style: const TextStyle(color: Color.fromARGB(255, 255, 106, 106)),
-                        )
-                      : Column(
-                          children: [
-                            const Text(
-                              "📍 Your Location",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: const Color.fromARGB(214, 184, 23, 23),
+                  width: 1.8,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Builder(
+                builder: (context) {
+                  final pos = LocationService.lastKnownPosition;
+                  final err = LocationService.lastError;
+
+                  if (err != null) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.location_off, color: Color.fromARGB(214, 184, 23, 23)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            err,
+                            style: const TextStyle(
+                              color: Color.fromARGB(214, 184, 23, 23),
+                              fontWeight: FontWeight.w600,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              "Latitude: ${_currentPosition!.latitude}",
-                            ),
-                            Text(
-                              "Longitude: ${_currentPosition!.longitude}",
-                            ),
-                          ],
+                          ),
                         ),
+                      ],
+                    );
+                  }
+
+                  if (pos == null) {
+                    return const Row(
+                      children: [
+                        Icon(Icons.location_searching, color: Color.fromARGB(214, 184, 23, 23)),
+                        SizedBox(width: 10),
+                        Text("Getting location..."),
+                      ],
+                    );
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.location_on, color: Color.fromARGB(214, 184, 23, 23)),
+                          SizedBox(width: 8),
+                          Text(
+                            "Current Location",
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Address
+                      Text(
+                        _isLoadingAddress
+                            ? "Converting coordinates to address..."
+                            : (_address ?? "Address not available"),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          height: 1.3,
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Lat/Lng (small)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              "Lat: ${pos.latitude.toStringAsFixed(5)}",
+                              style: const TextStyle(fontSize: 12, color: Colors.black54),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              "Lng: ${pos.longitude.toStringAsFixed(5)}",
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(fontSize: 12, color: Colors.black54),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
+          ),
             const SizedBox(height: 40),
             Column(
               children: [
@@ -373,47 +432,46 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
             ),
             const SizedBox(height: 40),
             Expanded(
-  child: Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    child: Row(
-      children: [
-        Expanded(
-            child: EmergencyBox(
-              icon: Icons.local_police,
-              label: "Police",
-              color: const Color.fromARGB(255, 0, 140, 255),
-              onPressed: () {
-                _showEmergencyContacts("Police");
-              },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                      child: EmergencyBox(
+                        icon: Icons.local_police,
+                        label: "Police",
+                        color: const Color.fromARGB(255, 0, 140, 255),
+                        onPressed: () {
+                          _showEmergencyContacts("Police");
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: EmergencyBox(
+                        icon: Icons.local_hospital,
+                        label: "Hospital",
+                        color: const Color.fromARGB(255, 68, 163, 71),
+                        onPressed: () {
+                          _showEmergencyContacts("Hospital");
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: EmergencyBox(
+                        icon: Icons.local_fire_department,
+                        label: "Fire Station",
+                        color: const Color.fromARGB(255, 241, 59, 46),
+                        onPressed: () {
+                          _showEmergencyContacts("Fire Station");
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: EmergencyBox(
-              icon: Icons.local_hospital,
-              label: "Hospital",
-              color: const Color.fromARGB(255, 68, 163, 71),
-              onPressed: () {
-                _showEmergencyContacts("Hospital");
-              },
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: EmergencyBox(
-              icon: Icons.local_fire_department,
-              label: "Fire Station",
-              color: const Color.fromARGB(255, 241, 59, 46),
-              onPressed: () {
-                _showEmergencyContacts("Fire Station");
-              },
-            ),
-          ),
-        ],
-      ),
-    ),
-  ),
-
           ],
         ),
       ),

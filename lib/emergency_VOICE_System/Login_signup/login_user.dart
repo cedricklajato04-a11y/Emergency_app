@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'sign_up.dart';
-import '../auth/auth_service.dart';
-import 'admin_login_page.dart';
+import 'package:my_app/emergency_VOICE_System/Login_signup/sign_up.dart';
+import '../../auth/auth_service.dart';
+import '../../AdminPanel/admin_login_page.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -98,19 +99,19 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 const SizedBox(height: 40),
                 Column(
-                  children: const [
-                    Icon(
-                      Icons.emergency,
-                      size: 130,
-                      color: Color.fromARGB(255, 139, 19, 19),
-                    ),
+                  children: [
+                    Image.asset(
+                        'assets/Logo.png',
+                        height: 130,
+                        fit: BoxFit.contain,
+                      ), 
                     SizedBox(height: 15),
                     Text(
                       'Emergency Voice',
                       style: TextStyle(
                         fontSize: 35,
                         fontWeight: FontWeight.w700,
-                        color: Color.fromARGB(255, 156, 25, 25),
+                        color: Color.fromARGB(255, 0, 0, 0),
                       ),
                     ),
                   ],
