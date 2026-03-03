@@ -31,5 +31,4 @@ String? getCurrentUserEmail() {
     final user = session?.user;
     return user?.email;
   }
-
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../constants/fallback_numbers.dart';
+import '../../constants/fallback_numbers.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
