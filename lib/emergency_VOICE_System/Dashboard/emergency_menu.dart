@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/emergency_VOICE_System/Contacts/Custom_contacts.dart';
+import 'package:my_app/emergency_VOICE_System/Contacts/EmegergencyContacts/emergency_contacts_page.dart';
 import 'package:my_app/emergency_VOICE_System/UserDetails/userdetails_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../Contacts/Custom_contacts.dart';
 import '../feedback_page.dart';
 import '../Settings/settings_page.dart';
 import '../AboutUs/aboutus_page.dart';
 import '../../auth/auth_service.dart';
-import '../../constants/fallback_numbers.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:my_app/services/location_service.dart';
 
 
@@ -30,110 +29,8 @@ class _EmergencyMenuPageState extends State<EmergencyMenuPage> {
   String? _address;
   bool _isLoadingAddress = false;
 
-  //supabase client
-  void _showEmergencyContacts(String type) async {
-  if (userId == null) return;
 
-  final response = await supabase
-      .from('custom_contacts')
-      .select()
-      .eq('user_id', userId!)
-      .eq('type', type);
-
-      // Check if response is a list of maps
-
-  final contacts = List<Map<String, dynamic>>.from(response); // Cast response to list of maps
-
-  showModalBottomSheet( // Show contacts in a bottom sheet
-    context: context,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) {
-      return Padding(
-        padding: const EdgeInsets.all(16),
-        child: contacts.isEmpty
-            ? Column(
-                mainAxisSize: MainAxisSize.min, 
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "$type Contacts",
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  ListTile(
-                    leading: const Icon(Icons.phone),
-                    title: const Text("Emergency Hotline"),
-                    subtitle: Text(
-                      "Fallback Number: ${FallbackNumbers.getByType(type)}", // Show fallback number if no custom contacts are found
-                    ),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            "Calling ${FallbackNumbers.getByType(type)}...", // Show fallback number in snackbar when tapped
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              )
-            : Column( // Show custom contacts if they exist
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "$type Contacts",
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  ListView.builder( // List custom contacts
-                    shrinkWrap: true,
-                    itemCount: contacts.length,
-                    itemBuilder: (context, index) {
-                      final contact = contacts[index];
-                      return ListTile(
-                        leading: const Icon(Icons.phone),
-                        title: Text(contact['name']),
-                        subtitle: Text(
-                          "${contact['number']}\n${contact['location']}",
-                        ),
-                        isThreeLine: true,
-                        onTap: () async {
-                          final phoneNumber = (contact['number'] ?? '').toString().trim();
-                          if (phoneNumber.isEmpty) return;
-
-                          final ok = await launchUrl(
-                            Uri(scheme: 'tel', path: phoneNumber),
-                            mode: LaunchMode.externalApplication,
-                          );
-
-                          if (!ok && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Could not open phone dialer")),
-                            );
-                          }
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
-      );
-    },
-  );
-}
-
+ 
 
 
 
@@ -179,7 +76,7 @@ Future<void> _initLocationFlow() async {
   setState(() => _isLoadingAddress = true);
 
   try {
-    final pos = await LocationService.refresh();
+    final pos = await LocationService.refresh();  
 
     if (pos == null) {
       setState(() {
@@ -188,7 +85,7 @@ Future<void> _initLocationFlow() async {
       return;
     }
 
-    // 1) Convert to address (with timeout)
+    //  Convert to address (with timeout)
     String? addr;
     try {
       addr = await LocationService.getAddressFromPosition(pos)
@@ -197,10 +94,10 @@ Future<void> _initLocationFlow() async {
       addr = "Address lookup failed (check internet)";
     }
 
-    // 2) SAVE TO DB (with timeout + catch)
+    //  SAVE TO DB (with timeout + catch)
     try {
       await LocationService.saveToDatabase(
-        userId: supabase.auth.currentUser!.id, // ✅ don’t use userId! state
+        userId: supabase.auth.currentUser!.id, 
         pos: pos,
         address: addr,
       ).timeout(const Duration(seconds: 8));
@@ -214,6 +111,7 @@ Future<void> _initLocationFlow() async {
       _address = addr ?? "Address not available";
     });
   } finally {
+    // ignore: control_flow_in_finally
     if (!mounted) return;
     setState(() => _isLoadingAddress = false);
   }
@@ -224,6 +122,8 @@ Future<void> _initLocationFlow() async {
   Future<void> _handleLogout(BuildContext context) async {
     await _authService.signOut();
   }
+
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -336,6 +236,7 @@ Future<void> _initLocationFlow() async {
                 ),
                 boxShadow: [
                   BoxShadow(
+                    // ignore: deprecated_member_use
                     color: Colors.black.withOpacity(0.06),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
@@ -444,47 +345,70 @@ Future<void> _initLocationFlow() async {
               ],
             ),
             const SizedBox(height: 40),
-            Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                      child: EmergencyBox(
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: EmergencyIconButton(
                         icon: Icons.local_police,
-                        label: "Police",
-                        color: const Color.fromARGB(255, 0, 140, 255),
+                        color: const Color.fromARGB(255, 9, 63, 107),
                         onPressed: () {
-                          _showEmergencyContacts("Police");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const EmergencyContactsPage(
+                                title: "Police Contacts",
+                                contactType: "police",
+                              ),
+                            ),
+                          );
                         },
                       ),
                     ),
+
                     const SizedBox(width: 16),
+
                     Expanded(
-                      child: EmergencyBox(
+                      child: EmergencyIconButton(
                         icon: Icons.local_hospital,
-                        label: "Hospital",
-                        color: const Color.fromARGB(255, 68, 163, 71),
+                        color: const Color.fromARGB(255, 3, 117, 6),
                         onPressed: () {
-                          _showEmergencyContacts("Hospital");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const EmergencyContactsPage(
+                                title: "Hospital Contacts",
+                                contactType: "hospital",
+                              ),
+                            ),
+                          );
                         },
                       ),
                     ),
+
                     const SizedBox(width: 16),
+
                     Expanded(
-                      child: EmergencyBox(
+                      child: EmergencyIconButton(
                         icon: Icons.local_fire_department,
-                        label: "Fire Station",
-                        color: const Color.fromARGB(255, 241, 59, 46),
+                        color: const Color.fromARGB(255, 124, 22, 15),
                         onPressed: () {
-                          _showEmergencyContacts("Fire Station");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const EmergencyContactsPage(
+                                title: "Fire Station Contacts",
+                                contactType: "fire",
+                              ),
+                            ),
+                          );
                         },
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -503,10 +427,20 @@ Future<void> _initLocationFlow() async {
             await _handleLogout(context);
             break;
           case "Custom Contacts":
+            Navigator.push(context,
+              MaterialPageRoute(
+                builder: (_) => const CustomContactsPage()),
+            );
+            break;
+          case "Emergency Contacts":
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (_) => const CustomContactsPage()),
+                builder: (_) => const EmergencyContactsPage(
+                  title: "Emergency Contacts",
+                  contactType: "police",
+                ),
+              ),
             );
             break;
           case "Feedback":
@@ -531,49 +465,35 @@ Future<void> _initLocationFlow() async {
   }
 }
 
-// 🔹 EMERGENCY BOX
-class EmergencyBox extends StatelessWidget {
+// 🔹 EMERGENCY BUTTON WIDGET
+class EmergencyIconButton extends StatelessWidget {
   final IconData icon;
-  final String label;
   final Color color;
-  final VoidCallback onPressed; // Callback for when the box is pressed
+  final VoidCallback onPressed;
 
-  const EmergencyBox({
+  const EmergencyIconButton({
     super.key,
     required this.icon,
-    required this.label,
     required this.color,
     required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1,
-      child: GestureDetector(
-        onTap: onPressed, // 👈 USE THIS
-        child: Container(
-          decoration: BoxDecoration(
-            // ignore: deprecated_member_use
-            color: color.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color, width: 2),
+    return SizedBox(
+      height: 60,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 50, color: color),
-              const SizedBox(height: 12),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
+        ),
+        child: Icon(
+          icon,
+          size: 30,
         ),
       ),
     );
