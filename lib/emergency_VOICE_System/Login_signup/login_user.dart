@@ -107,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
                       ), 
                     SizedBox(height: 15),
                     Text(
-                      'Emergency Voice',
+                      'SLPC Alert',
                       style: TextStyle(
                         fontSize: 35,
                         fontWeight: FontWeight.w700,
